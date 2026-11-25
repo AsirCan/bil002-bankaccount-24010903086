@@ -1,0 +1,1226 @@
+{
+  "info": {
+    "name": "BIL002 BankAccount API",
+    "description": "BIL 002 dönem projesi · her endpoint için en az bir başarılı ve bir hatalı istek. Adres {{baseUrl}} ortam değişkeninden gelir. Hesap numaraları istekler arasında hesapNo / hedefNo ortam değişkenleriyle taşınır. Sıra önemlidir: Collection Runner ile baştan sona koşun.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "API-01: Hesap aç (geçerli STANDARD)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.test(\"ACTIVE ve 10 haneli numara\", () => { pm.expect(j.status).to.eql(\"ACTIVE\"); pm.expect(j.accountNumber).to.match(/^[1-9][0-9]{9}$/); });",
+              "pm.environment.set(\"hesapNo\", j.accountNumber);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"ownerName\":\"Postman Kullanıcı\",\"accountType\":\"STANDARD\",\"initialBalance\":1000}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "API-02: Hedef hesap aç (geçerli PREMIUM, bakiye yok)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.test(\"initialBalance yoksa bakiye 0 (R-1.3)\", () => pm.expect(j.balance).to.eql(0));",
+              "pm.environment.set(\"hedefNo\", j.accountNumber);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"ownerName\":\"Postman Hedef\",\"accountType\":\"PREMIUM\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "API-03: Hesap aç (geçersiz tür 'standard') → 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "pm.test(\"Hata gövdesi §7 biçiminde\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"status\"); pm.expect(j).to.have.property(\"message\"); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"ownerName\":\"Ali\",\"accountType\":\"standard\",\"initialBalance\":10}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "API-04: Hesap aç (negatif başlangıç bakiyesi) → 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"ownerName\":\"Ali\",\"accountType\":\"STANDARD\",\"initialBalance\":-100}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "API-05: Tüm hesaplar → 200, dizi",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Yanıt dizi\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts"
+          ]
+        }
+      }
+    },
+    {
+      "name": "API-06: Hesap sorgula (var) → 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Aynı numara\", () => pm.expect(pm.response.json().accountNumber).to.eql(pm.environment.get(\"hesapNo\")));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts/{{hesapNo}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts",
+            "{{hesapNo}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "API-07: Hesap sorgula (yok) → 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+              "pm.test(\"Hata gövdesi §7 biçiminde\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"status\"); pm.expect(j).to.have.property(\"message\"); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts/9999999999",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts",
+            "9999999999"
+          ]
+        }
+      }
+    },
+    {
+      "name": "API-08: Para yatır 500 → 200, bakiye 1500",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Bakiye 1500 (R-2.5)\", () => pm.expect(pm.response.json().balance).to.be.closeTo(1500, 0.001));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts/{{hesapNo}}/deposit",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts",
+            "{{hesapNo}}",
+            "deposit"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount\":500}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "API-09: Para yatır (negatif) → 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "pm.test(\"Hata gövdesi §7 biçiminde\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"status\"); pm.expect(j).to.have.property(\"message\"); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts/{{hesapNo}}/deposit",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts",
+            "{{hesapNo}}",
+            "deposit"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount\":-5}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "API-10: Para yatır (bozuk JSON) → 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts/{{hesapNo}}/deposit",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts",
+            "{{hesapNo}}",
+            "deposit"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount\": ",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "API-11: Para çek 200 → 200, bakiye 1300",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Bakiye 1300 (R-3.6)\", () => pm.expect(pm.response.json().balance).to.be.closeTo(1300, 0.001));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts/{{hesapNo}}/withdraw",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts",
+            "{{hesapNo}}",
+            "withdraw"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount\":200}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "API-12: Para çek (yetersiz bakiye) → 422",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 422\", () => pm.response.to.have.status(422));",
+              "pm.test(\"Hata gövdesi §7 biçiminde\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"status\"); pm.expect(j).to.have.property(\"message\"); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts/{{hesapNo}}/withdraw",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts",
+            "{{hesapNo}}",
+            "withdraw"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount\":99999}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "API-13: Faiz uygula → 200, STANDARD %3: 1300 → 1303.25",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Faiz kuruşlu (R-8.3)\", () => pm.expect(pm.response.json().balance).to.be.closeTo(1303.25, 0.001));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts/{{hesapNo}}/interest",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts",
+            "{{hesapNo}}",
+            "interest"
+          ]
+        }
+      }
+    },
+    {
+      "name": "API-14: Faiz uygula (olmayan hesap) → 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts/9999999999/interest",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts",
+            "9999999999",
+            "interest"
+          ]
+        }
+      }
+    },
+    {
+      "name": "API-15: Transfer 100 → 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Başarı mesajı\", () => pm.expect(pm.response.json()).to.have.property(\"message\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/transactions/transfer",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "transactions",
+            "transfer"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"fromAccount\":\"{{hesapNo}}\",\"toAccount\":\"{{hedefNo}}\",\"amount\":100}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "API-16: Transfer (aynı hesap) → 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/transactions/transfer",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "transactions",
+            "transfer"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"fromAccount\":\"{{hesapNo}}\",\"toAccount\":\"{{hesapNo}}\",\"amount\":10}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "API-17: Transfer (eksik alan) → 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/transactions/transfer",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "transactions",
+            "transfer"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"fromAccount\":\"{{hesapNo}}\",\"amount\":10}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "API-18: İşlem geçmişi → 200, en yeni önce",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "const t = pm.response.json();",
+              "pm.test(\"Dizi ve en yeni işlem TRANSFER (R-9.3)\", () => { pm.expect(t).to.be.an(\"array\"); pm.expect(t[0].type).to.eql(\"TRANSFER\"); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts/{{hesapNo}}/transactions",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts",
+            "{{hesapNo}}",
+            "transactions"
+          ]
+        }
+      }
+    },
+    {
+      "name": "API-19: İşlem geçmişi (olmayan hesap) → 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts/9999999999/transactions",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts",
+            "9999999999",
+            "transactions"
+          ]
+        }
+      }
+    },
+    {
+      "name": "API-20: İşlem geçmişi alternatif yol → 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Hedefte TRANSFER kaydı\", () => pm.expect(pm.response.json()[0].type).to.eql(\"TRANSFER\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/transactions/{{hedefNo}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "transactions",
+            "{{hedefNo}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "API-21: İşlem geçmişi alternatif yol (olmayan) → 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/transactions/9999999999",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "transactions",
+            "9999999999"
+          ]
+        }
+      }
+    },
+    {
+      "name": "API-22: Dondur → 200, FROZEN",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"FROZEN\", () => pm.expect(pm.response.json().status).to.eql(\"FROZEN\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts/{{hesapNo}}/freeze",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts",
+            "{{hesapNo}}",
+            "freeze"
+          ]
+        }
+      }
+    },
+    {
+      "name": "API-23: Tekrar dondur (zaten FROZEN) → 409",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts/{{hesapNo}}/freeze",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts",
+            "{{hesapNo}}",
+            "freeze"
+          ]
+        }
+      }
+    },
+    {
+      "name": "API-24: Dondurmayı kaldır → 200, ACTIVE",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"ACTIVE\", () => pm.expect(pm.response.json().status).to.eql(\"ACTIVE\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts/{{hesapNo}}/unfreeze",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts",
+            "{{hesapNo}}",
+            "unfreeze"
+          ]
+        }
+      }
+    },
+    {
+      "name": "API-25: Dondurmayı kaldır (zaten ACTIVE) → 409",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts/{{hesapNo}}/unfreeze",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts",
+            "{{hesapNo}}",
+            "unfreeze"
+          ]
+        }
+      }
+    },
+    {
+      "name": "API-26: Kapat (bakiyesi var) → 409",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts/{{hesapNo}}/close",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts",
+            "{{hesapNo}}",
+            "close"
+          ]
+        }
+      }
+    },
+    {
+      "name": "API-27: Kapat (bakiye 0) → 200, CLOSED",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"CLOSED\", () => pm.expect(pm.response.json().status).to.eql(\"CLOSED\"));"
+            ]
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Hedef hesabın bakiyesi transferden sonra 100: önce sıfırlansın diye 100 çekilir",
+              "pm.sendRequest({ url: pm.environment.get(\"baseUrl\") + \"/api/accounts/\" + pm.environment.get(\"hedefNo\") + \"/withdraw\",",
+              "  method: \"POST\", header: { \"Content-Type\": \"application/json\", \"User-Agent\": \"Mozilla/5.0\" },",
+              "  body: { mode: \"raw\", raw: JSON.stringify({ amount: 100 }) } });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts/{{hedefNo}}/close",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts",
+            "{{hedefNo}}",
+            "close"
+          ]
+        }
+      }
+    },
+    {
+      "name": "API-28: Kapat (olmayan hesap) → 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "Mozilla/5.0 (BIL002 Postman)"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts/9999999999/close",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts",
+            "9999999999",
+            "close"
+          ]
+        }
+      }
+    }
+  ]
+}
