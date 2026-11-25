@@ -1,0 +1,14 @@
+[ERROR] Tests run: 5, Failures: 5, Errors: 0, Skipped: 0, Time elapsed: 6.055 s <<< FAILURE! -- in TDD · Hesap özeti (GET /api/accounts/{no}/summary)
+[ERROR] tr.edu.sakarya.bil002.integration.HesapOzetiTesti.tdd03_ozet_islemsizHesap -- Time elapsed: 1.778 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<200> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+[ERROR] tr.edu.sakarya.bil002.integration.HesapOzetiTesti.tdd02_ozet_transferVeFaizToplamaGirmez -- Time elapsed: 0.043 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<200> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+[ERROR] tr.edu.sakarya.bil002.integration.HesapOzetiTesti.tdd01_ozet_basariliIslemlerToplanir -- Time elapsed: 0.050 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<200> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+[ERROR] tr.edu.sakarya.bil002.integration.HesapOzetiTesti.tdd05_ozet_kapaliHesap -- Time elapsed: 0.018 s <<< FAILURE!
