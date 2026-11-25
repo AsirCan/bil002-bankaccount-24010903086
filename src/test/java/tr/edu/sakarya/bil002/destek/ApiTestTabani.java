@@ -65,4 +65,19 @@ public abstract class ApiTestTabani {
     protected JsonNode gecmis(String hesapNo) {
         return api.get("/api/accounts/" + hesapNo + "/transactions").govde();
     }
+
+    /** Geçmişte verilen tip ve durumdaki kayıt sayısı (ör. DEPOSIT + FAILED). */
+    protected int kayitSayisi(String hesapNo, String tip, String durum) {
+        int sayi = 0;
+        for (JsonNode islem : gecmis(hesapNo)) {
+            if (tip.equals(islem.path("type").asText()) && durum.equals(islem.path("status").asText())) {
+                sayi++;
+            }
+        }
+        return sayi;
+    }
+
+    protected ApiIstemcisi.Yanit hesapIslemi(String hesapNo, String islem) {
+        return api.post("/api/accounts/" + hesapNo + "/" + islem);
+    }
 }
