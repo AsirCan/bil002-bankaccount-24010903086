@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import tr.edu.sakarya.bil002.destek.ApiIstemcisi.Yanit;
 import tr.edu.sakarya.bil002.destek.ApiTestTabani;
@@ -61,7 +62,9 @@ class ApiDumanTesti extends ApiTestTabani {
                 () -> assertEquals("SUCCESS", sonIslem.get("status").asText()));
     }
 
+    // R-10.2: Hesap mevcut değilse 404 Not Found döner. Rapor: H-01
     @Test
+    @Tag("hata")
     @DisplayName("DUMAN-04: Olmayan hesap 404 döner, hata gövdesi JSON (§7)")
     void duman04_olmayanHesap404() {
         Yanit yanit = hesap("1000000000");

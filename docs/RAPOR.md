@@ -141,9 +141,22 @@ _(GitHub Actions ekran görüntüsü)_
 
 | Hata No | Açıklama | Hangi Teknikle Bulundu | Etki Seviyesi |
 |---|---|---|---|
-| | | | |
+| H-01 | Olmayan hesap sorgusu 404 yerine 200 ve boş gövde döndürüyor | API (duman testi) | Orta |
 
 _Her hata için: ilgili gereksinim kodu (örn. R-3.4), hatayı yakalayan test metodu ve beklenen / gerçekleşen davranış._
+
+### H-01: Olmayan hesap sorgusu 404 yerine 200 dönüyor
+
+| Alan | İçerik |
+|---|---|
+| İhlal edilen gereksinim | R-10.2, §7, G-3 |
+| Yeniden üretme | Canlı örnekte `GET /api/accounts/9999999999` (var olmayan hesap) |
+| Beklenen | 404 Not Found + §7 biçiminde JSON hata gövdesi |
+| Gerçekleşen | 200 OK, boş gövde. Aynı numarayla `deposit` ve `transactions` doğru şekilde 404 veriyor |
+| Yakalayan test | `ApiDumanTesti.duman04_olmayanHesap404` (`@Tag("hata")`) |
+| Teknik | API duman testi (canlı servis) |
+| Etki | Orta: yanlış hata kodu |
+| Sadece canlıda / yük altında mı? | Sadece canlıda (referans API'de geçiyor), yük gerektirmiyor |
 
 ## 10. Sonuç ve Değerlendirme
 
