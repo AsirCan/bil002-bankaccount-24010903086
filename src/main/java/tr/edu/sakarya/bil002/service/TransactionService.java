@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import tr.edu.sakarya.bil002.dto.AccountSummary;
 import tr.edu.sakarya.bil002.exception.AccountNotFoundException;
 import tr.edu.sakarya.bil002.exception.AccountStateException;
 import tr.edu.sakarya.bil002.exception.InsufficientBalanceException;
@@ -80,6 +81,25 @@ public class TransactionService {
                     .reversed());                                                 // R-9.3: en yeni önce
             return history;                                                       // R-9.4: yoksa boş liste
         }
+    }
+
+    /** Hesap özeti (TDD özelliği, docs/tdd/OZELLIK.md S-1 … S-8). */
+    public AccountSummary getSummary(String accountNumber) {
+        List<Transaction> history = getHistory(accountNumber);                    // S-7: yoksa 404
+        return new AccountSummary(accountNumber,
+                successfulTotal(history, TransactionType.DEPOSIT),                // S-2, S-4
+                successfulTotal(history, TransactionType.WITHDRAWAL),             // S-3, S-4
+                history.size());                                                  // S-5
+    }
+
+    private BigDecimal successfulTotal(List<Transaction> history, TransactionType type) {
+        BigDecimal total = BigDecimal.ZERO;
+        for (Transaction t : history) {
+            if (t.getType() == type && t.getStatus() == TransactionStatus.SUCCESS) {
+                total = total.add(t.getAmount());
+            }
+        }
+        return total;
     }
 
     /** Hesaplar arası transfer (R-4.1 – R-4.8). Kayıt: iki hesapta da TRANSFER/SUCCESS. */
