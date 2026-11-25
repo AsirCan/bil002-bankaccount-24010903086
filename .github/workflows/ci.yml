@@ -1,6 +1,10 @@
 # BIL 002 · CI pipeline
 # Her push'ta (main / develop) ve pull request'te çalışır.
 # Kural: aşağıdaki adımlar silinmez ve devre dışı bırakılmaz, sadece yeni adım eklenebilir.
+#
+# Not (proje yapısı): src/main bizim REFERANS API'miz. @hata testleri canlı serviste kırmızı,
+# referans API'de yeşildir. Canlı koşum için repo secret'ı BIL002_TOKEN tanımlanır
+# (Settings → Secrets and variables → Actions) ve canlı örnek açıkken pipeline çalıştırılır.
 name: CI
 
 on:
@@ -8,10 +12,13 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
+  workflow_dispatch:
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    env:
+      CANLI_VAR: ${{ secrets.BIL002_TOKEN != '' }}
 
     steps:
       - name: Kodu çek
@@ -38,27 +45,56 @@ jobs:
           name: jacoco-raporu
           path: target/site/jacoco/
 
+      - name: Cucumber (BDD) raporunu sakla
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucumber-raporu
+          path: target/cucumber/
+
       # Sadece hata yakalayan testler. Kırmızı olmaları beklenir, pipeline'ı bozmaz.
+      # Hedef: referans API (yerel). Referans API gereksinime uyduğu için burada yeşildir.
       - name: Hata yakalayan testler (@hata)
         id: hata
         continue-on-error: true
         run: |
           rm -rf target/surefire-reports
           ./mvnw -B test -Dgroups=hata -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true
+          mkdir -p target/hata-raporlari/yerel && cp target/surefire-reports/TEST-*.xml target/hata-raporlari/yerel/ || true
+
+      # Aynı @hata testleri CANLI servise karşı (secret tanımlıysa). Kırmızı = canlı serviste hata.
+      - name: Hata yakalayan testler (@hata) - canlı servis
+        if: env.CANLI_VAR == 'true'
+        continue-on-error: true
+        env:
+          BIL002_TOKEN: ${{ secrets.BIL002_TOKEN }}
+        run: |
+          rm -rf target/surefire-reports
+          ./mvnw -B test -Dgroups=hata -Dhedef=canli -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true
+          mkdir -p target/hata-raporlari/canli && cp target/surefire-reports/TEST-*.xml target/hata-raporlari/canli/ || true
+
+      - name: Statik analiz raporu (PMD, bilgi amaçlı)
+        if: always()
+        continue-on-error: true
+        run: ./mvnw -B pmd:pmd
 
       - name: "@hata özeti (Summary)"
         if: always()
         run: |
           echo "## @hata etiketli testler" >> "$GITHUB_STEP_SUMMARY"
-          if ls target/surefire-reports/TEST-*.xml >/dev/null 2>&1; then
-            toplam=$(grep -ho 'tests="[0-9]*"' target/surefire-reports/TEST-*.xml | grep -o '[0-9]*' | paste -sd+ | bc)
-            kalan=$(grep -ho 'failures="[0-9]*"' target/surefire-reports/TEST-*.xml | grep -o '[0-9]*' | paste -sd+ | bc)
-            hatali=$(grep -ho 'errors="[0-9]*"' target/surefire-reports/TEST-*.xml | grep -o '[0-9]*' | paste -sd+ | bc)
-            echo "| Koşulan | Kırmızı (failure) | Hata (error) |" >> "$GITHUB_STEP_SUMMARY"
-            echo "|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
-            echo "| $toplam | $kalan | $hatali |" >> "$GITHUB_STEP_SUMMARY"
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "Kırmızı @hata testi = gereksinimden sapma yakalandı (bkz. docs/RAPOR.md Bölüm 9)." >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "Henüz @hata etiketli test yok." >> "$GITHUB_STEP_SUMMARY"
-          fi
+          echo "| Hedef | Koşulan | Kırmızı (failure) | Hata (error) |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          for hedef in yerel canli; do
+            d="target/hata-raporlari/$hedef"
+            if ls "$d"/TEST-*.xml >/dev/null 2>&1; then
+              toplam=$(grep -ho '<testsuite [^>]*' "$d"/TEST-*.xml | grep -o ' tests="[0-9]*"' | grep -o '[0-9]*' | paste -sd+ | bc)
+              kalan=$(grep -ho '<testsuite [^>]*' "$d"/TEST-*.xml | grep -o ' failures="[0-9]*"' | grep -o '[0-9]*' | paste -sd+ | bc)
+              hatali=$(grep -ho '<testsuite [^>]*' "$d"/TEST-*.xml | grep -o ' errors="[0-9]*"' | grep -o '[0-9]*' | paste -sd+ | bc)
+              echo "| $hedef | $toplam | $kalan | $hatali |" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "| $hedef | - | - | - (koşulmadı) |" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **yerel**: referans API (gereksinime uygun) → @hata testleri yeşil olmalı." >> "$GITHUB_STEP_SUMMARY"
+          echo "- **canli**: hocanın canlı servisi → kırmızı @hata testi = gereksinimden sapma (docs/RAPOR.md Bölüm 9, H-01..H-14)." >> "$GITHUB_STEP_SUMMARY"
