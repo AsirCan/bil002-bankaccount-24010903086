@@ -87,6 +87,15 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- Varsayılan kalıplar sadece *Test / *Tests ile biten sınıfları bulur.
+                         Türkçe adlı test sınıflarımız (ApiDumanTesti, KaraKutuEpTesti ...) da koşsun diye *Testi eklendi. -->
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*Tests.java</include>
+                        <include>**/*Testi.java</include>
+                    </includes>
+                </configuration>
             </plugin>
 
             <!-- JaCoCo: testler koşarken hangi satır/dal çalıştı, onu ölçer.
