@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+  BIL 002 projesi Checkstyle kuralları.
+  Amaç: okunabilir, tutarlı kod. Kurallar az ve gerekçeli tutuldu:
+  her birini sunumda "bu kural neden var?" diye açıklayabilmeliyiz.
+-->
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="warning"/>
+
+    <!-- Girinti için tab değil boşluk kullanılır -->
+    <module name="FileTabCharacter"/>
+    <!-- Bir satır en fazla 140 karakter (okunabilirlik) -->
+    <module name="LineLength">
+        <property name="max" value="140"/>
+    </module>
+
+    <module name="TreeWalker">
+        <!-- İsimlendirme: sınıflar BuyukHarfle, değişkenler kucukHarfle, sabitler BUYUK_HARF -->
+        <module name="TypeName"/>
+        <module name="MemberName"/>
+        <module name="ParameterName"/>
+        <module name="LocalVariableName"/>
+        <module name="ConstantName"/>
+        <!-- Metot adı küçük harfle başlar; test adlarında alt çizgiye izin var:
+             örn. bva03_standartTamLimitYatirma_kabulEdilmeli -->
+        <module name="MethodName">
+            <property name="format" value="^[a-z][a-zA-Z0-9_]*$"/>
+        </module>
+
+        <!-- import kuralları: yıldızlı import yok, kullanılmayan/tekrarlanan import yok -->
+        <module name="AvoidStarImport"/>
+        <module name="UnusedImports"/>
+        <module name="RedundantImport"/>
+
+        <!-- if / for / while her zaman süslü parantezli: tek satırlık dal hatası olmasın -->
+        <module name="NeedBraces"/>
+        <!-- Boş catch / boş blok yok: hata sessizce yutulmasın -->
+        <module name="EmptyBlock"/>
+        <module name="EmptyCatchBlock"/>
+        <!-- switch'te default dalı zorunlu -->
+        <module name="MissingSwitchDefault"/>
+        <!-- equals() yazan hashCode() da yazar -->
+        <module name="EqualsHashCode"/>
+        <!-- Bir satırda tek ifade -->
+        <module name="OneStatementPerLine"/>
+        <!-- Metot en fazla 60 satır (uzun metot = test edilmesi zor metot) -->
+        <module name="MethodLength">
+            <property name="max" value="60"/>
+        </module>
+    </module>
+</module>

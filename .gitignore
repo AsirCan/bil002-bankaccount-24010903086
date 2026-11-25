@@ -1,0 +1,17 @@
+# Derleme çıktısı
+target/
+
+# IDE dosyaları
+.idea/
+*.iml
+.vscode/
+
+# İşletim sistemi
+.DS_Store
+Thumbs.db
+
+# GİZLİ: canlı servis token'ı içeren yerel ayarlar ASLA commit edilmez
+canli.properties
+.env
+*.postman_environment.json
+performans/*.local.*
