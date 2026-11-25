@@ -135,17 +135,17 @@ R-x.y yorumu ve `@DisplayName`'de Test ID var.
 ### 2.3 Karar Tablosu (`KararTablosuTesti`)
 
 **Tablo 1, Transfer.** 7 koşul → tam tablo 2⁷ = 128 kural. Bir koşul "Hayır" olduğunda sonuç diğer koşullardan bağımsız
-olduğu için ("-" = önemsiz) tablo **10 kurala** indirgendi.
+olduğu için ("-" = önemsiz) tablo **10 kurala** indirgendi. Gösterim hocanın notundaki gibi: D = Doğru, Y = Yanlış, - = önemsiz.
 
 | Koşul / Eylem | K1 | K2 | K3 | K4 | K5 | K6 | K7 | K8 | K9 | K10 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Kaynak hesap var mı? | E | E | E | E | E | E | E | E | **H** | E |
-| Hedef hesap var mı? | E | E | E | E | E | E | E | **H** | - | E |
-| Kaynak ACTIVE mi? | E | **H** | E | E | **H (CLOSED)** | E | E | - | - | E |
-| Hedef ACTIVE mi? | E | E | **H (FROZEN)** | **H (CLOSED)** | E | E | E | - | - | E |
-| Farklı hesaplar mı? | E | E | E | E | E | **H** | E | - | - | E |
-| amount > 0 mı? | E | E | E | E | E | E | E | - | - | **H** |
-| Bakiye yeterli mi? | E | - | - | - | **H (0)** | - | **H** | - | - | - |
+| Kaynak hesap var mı? | D | D | D | D | D | D | D | D | **Y** | D |
+| Hedef hesap var mı? | D | D | D | D | D | D | D | **Y** | - | D |
+| Kaynak ACTIVE mi? | D | **Y** | D | D | **Y (CLOSED)** | D | D | - | - | D |
+| Hedef ACTIVE mi? | D | D | **Y (FROZEN)** | **Y (CLOSED)** | D | D | D | - | - | D |
+| Farklı hesaplar mı? | D | D | D | D | D | **Y** | D | - | - | D |
+| amount > 0 mı? | D | D | D | D | D | D | D | - | - | **Y** |
+| Bakiye yeterli mi? | D | - | - | - | **Y (0)** | - | **Y** | - | - | - |
 | **Eylem** | 200, iki bakiye değişir, 2 kayıt | 409 | 409 | 409 | red (4xx) | 400 | 422 | 404 | 404 | 400 |
 | **Test ID** | KT-01 | KT-02 | KT-03 | KT-04 | KT-05 | KT-06 | KT-07 | KT-08 | KT-09 | KT-10 |
 | **Sonuç (canlı)** | ✔ | ✔ | ✘ H-11 | ✘ H-11 | ✔ | ✘ H-12 | ✔ | ✔ | ✔ | ✔ |
