@@ -1,0 +1,64 @@
+# BIL 002 · CI pipeline
+# Her push'ta (main / develop) ve pull request'te çalışır.
+# Kural: aşağıdaki adımlar silinmez ve devre dışı bırakılmaz, sadece yeni adım eklenebilir.
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Kodu çek
+        uses: actions/checkout@v4
+
+      - name: Java 17 kur (Maven önbelleği ile)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Statik analiz (Checkstyle)
+        run: ./mvnw -B checkstyle:check
+
+      # ZORUNLU YEŞİL: hata yakalayan (@hata) testler hariç her şey geçmeli.
+      - name: Testler (hata etiketliler hariç)
+        run: ./mvnw -B test -DexcludedGroups=hata
+
+      - name: Kapsama raporunu sakla (JaCoCo)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-raporu
+          path: target/site/jacoco/
+
+      # Sadece hata yakalayan testler. Kırmızı olmaları beklenir, pipeline'ı bozmaz.
+      - name: Hata yakalayan testler (@hata)
+        id: hata
+        continue-on-error: true
+        run: |
+          rm -rf target/surefire-reports
+          ./mvnw -B test -Dgroups=hata -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true
+
+      - name: "@hata özeti (Summary)"
+        if: always()
+        run: |
+          echo "## @hata etiketli testler" >> "$GITHUB_STEP_SUMMARY"
+          if ls target/surefire-reports/TEST-*.xml >/dev/null 2>&1; then
+            toplam=$(grep -ho 'tests="[0-9]*"' target/surefire-reports/TEST-*.xml | grep -o '[0-9]*' | paste -sd+ | bc)
+            kalan=$(grep -ho 'failures="[0-9]*"' target/surefire-reports/TEST-*.xml | grep -o '[0-9]*' | paste -sd+ | bc)
+            hatali=$(grep -ho 'errors="[0-9]*"' target/surefire-reports/TEST-*.xml | grep -o '[0-9]*' | paste -sd+ | bc)
+            echo "| Koşulan | Kırmızı (failure) | Hata (error) |" >> "$GITHUB_STEP_SUMMARY"
+            echo "|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
+            echo "| $toplam | $kalan | $hatali |" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Kırmızı @hata testi = gereksinimden sapma yakalandı (bkz. docs/RAPOR.md Bölüm 9)." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Henüz @hata etiketli test yok." >> "$GITHUB_STEP_SUMMARY"
+          fi
