@@ -142,6 +142,24 @@
                     <violationSeverity>warning</violationSeverity>
                 </configuration>
             </plugin>
+
+            <!-- PMD: ikinci statik analiz aracı (olası hata, kötü uygulama, tasarım kokuları).
+                 Elle çalıştırılır: mvnw pmd:pmd (rapor target/pmd.xml), mvnw pmd:check -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>3.26.0</version>
+                <configuration>
+                    <includeTests>false</includeTests>
+                    <format>xml</format>
+                    <printFailingErrors>true</printFailingErrors>
+                    <rulesets>
+                        <ruleset>category/java/bestpractices.xml</ruleset>
+                        <ruleset>category/java/errorprone.xml</ruleset>
+                        <ruleset>category/java/design.xml</ruleset>
+                    </rulesets>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
