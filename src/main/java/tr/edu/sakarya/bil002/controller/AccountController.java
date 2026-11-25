@@ -1,6 +1,9 @@
 package tr.edu.sakarya.bil002.controller;
 
+import java.math.BigDecimal;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +16,8 @@ import tr.edu.sakarya.bil002.dto.AmountRequest;
 import tr.edu.sakarya.bil002.dto.CreateAccountRequest;
 import tr.edu.sakarya.bil002.model.Account;
 import tr.edu.sakarya.bil002.model.Transaction;
+import tr.edu.sakarya.bil002.model.TransactionStatus;
+import tr.edu.sakarya.bil002.model.TransactionType;
 import tr.edu.sakarya.bil002.service.AccountService;
 import tr.edu.sakarya.bil002.service.TransactionService;
 
@@ -82,5 +87,27 @@ public class AccountController {
     @GetMapping("/{accountNumber}/transactions")
     public List<Transaction> transactions(@PathVariable String accountNumber) {
         return transactionService.getHistory(accountNumber);
+    }
+
+    /** TDD özelliği: hesap özeti (docs/tdd/OZELLIK.md). */
+    @GetMapping("/{accountNumber}/summary")
+    public Map<String, Object> summary(@PathVariable String accountNumber) {
+        List<Transaction> history = transactionService.getHistory(accountNumber);   // yoksa 404 (S-7)
+        BigDecimal deposited = BigDecimal.ZERO;
+        BigDecimal withdrawn = BigDecimal.ZERO;
+        for (Transaction t : history) {
+            if (t.getStatus() == TransactionStatus.SUCCESS && t.getType() == TransactionType.DEPOSIT) {
+                deposited = deposited.add(t.getAmount());
+            }
+            if (t.getStatus() == TransactionStatus.SUCCESS && t.getType() == TransactionType.WITHDRAWAL) {
+                withdrawn = withdrawn.add(t.getAmount());
+            }
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("accountNumber", accountNumber);
+        result.put("totalDeposited", deposited);
+        result.put("totalWithdrawn", withdrawn);
+        result.put("transactionCount", history.size());
+        return result;
     }
 }
